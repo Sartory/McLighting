@@ -1,3 +1,4 @@
+#define VERSION 1.01
 #define USE_NEOANIMATIONFX  // Uses NeoAnimationFX, PIN is ignored & set to RX/GPIO3 or UART method: D4/GPIO2, see: https://github.com/debsahu/NeoAnimationFX
 //#define USE_WS2812FX          // Uses WS2812FX, see: https://github.com/kitesurfer1404/WS2812FX
 
@@ -7,11 +8,12 @@
 #define BUILTIN_LED 2    // ESP-12F has the built in LED on GPIO2, see https://github.com/esp8266/Arduino/issues/2192
 #define BUTTON 4         // Input pin (4 / D2) for switching the LED strip on / off, connect this PIN to ground to trigger button.
 
-const char HOSTNAME[] = "McLighting02";   // Friedly hostname
+const char HOSTNAME[] = "HalcyonTower01";   // Friedly hostname
 
+#define REMOTE_DEBUG
 #define HTTP_OTA             // If defined, enable ESP8266HTTPUpdateServer OTA code.
-//#define ENABLE_OTA         // If defined, enable Arduino OTA code.
-//#define ENABLE_AMQTT         // If defined, enable Async MQTT code, see: https://github.com/marvinroger/async-mqtt-client
+#define ENABLE_OTA         // If defined, enable Arduino OTA code.
+#define ENABLE_AMQTT         // If defined, enable Async MQTT code, see: https://github.com/marvinroger/async-mqtt-client
 //#define ENABLE_MQTT        // If defined, enable MQTT client code, see: https://github.com/toblum/McLighting/wiki/MQTT-API
 //#define ENABLE_HOMEASSISTANT // If defined, enable Homeassistant integration, ENABLE_MQTT must be active
 //#define ENABLE_BUTTON        // If defined, enable button handling code, see: https://github.com/toblum/McLighting/wiki/Button-control
@@ -90,7 +92,14 @@ uint32_t autoParams[][4] = { // color, speed, mode, duration (seconds)
 // ***************************************************************************
 // Global variables / definitions
 // ***************************************************************************
-#define DBG_OUTPUT_PORT Serial  // Set debug output port
+
+// Define debug port
+#ifdef REMOTE_DEBUG
+RemoteDebug Debug;
+#define DBG_OUTPUT_PORT Debug  // Set debug output port to Telnet
+#else
+#define DBG_OUTPUT_PORT Serial  // Set debug output port to serial
+#endif
 
 // List of all color modes
 #ifdef ENABLE_LEGACY_ANIMATIONS
@@ -123,7 +132,7 @@ LEDState ledstates[NUMLEDS];          // Get an array of led states to store the
 LEDState main_color = { 255, 0, 0 };  // Store the "main color" of the strip used in single color modes
 
 #define ENABLE_STATE_SAVE_SPIFFS        // If defined, saves state on SPIFFS
-//#define ENABLE_STATE_SAVE_EEPROM        // If defined, save state on reboot
+#define ENABLE_STATE_SAVE_EEPROM        // If defined, save state on reboot
 #ifdef ENABLE_STATE_SAVE_EEPROM
   char current_state[32];               // Keeps the current state representation
   char last_state[32];                  // Save the last state as string representation
