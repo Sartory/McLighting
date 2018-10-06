@@ -1,5 +1,3 @@
-#include "definitions.h"
-#include "version.h"
 // ***************************************************************************
 // Load libraries for: WebServer / WiFiManager / WebSockets
 // ***************************************************************************
@@ -15,8 +13,16 @@
 #include <FS.h>
 #include <EEPROM.h>
 
+#include "RemoteDebug.h"  //https://github.com/JoaoLopesF/RemoteDebug
+
 #include <WebSockets.h>           //https://github.com/Links2004/arduinoWebSockets
 #include <WebSocketsServer.h>
+
+// ***************************************************************************
+// Sub-modules of this application
+// ***************************************************************************
+#include "definitions.h"
+#include "version.h"
 
 // OTA
 #ifdef ENABLE_OTA
@@ -196,7 +202,7 @@ void configModeCallback (WiFiManager *myWiFiManager) {
 
   uint16_t i;
   for (i = 0; i < strip.numPixels(); i++) {
-    strip.setPixelColor(i, 0, 0, 255);
+    strip.setPixelColor(i, 0, 0, 120);
   }
   strip.show();
 }
@@ -230,7 +236,17 @@ void saveConfigCallback () {
 void setup() {
 //  system_update_cpu_freq(160);
 
-  DBG_OUTPUT_PORT.begin(115200);
+  #ifdef REMOTE_DEBUG
+    Debug.begin(HOSTNAME);  // Initiaze the telnet server - hostname is the used
+                          // in MDNS.begin
+    Debug.setResetCmdEnabled(true);  // Enable the reset command
+  #endif
+
+  #ifndef REMOTE_DEBUG
+    DBG_OUTPUT_PORT.begin(115200);
+  #endif
+  
+  DBG_OUTPUT_PORT.printf("system_get_cpu_freq: %d\n", system_get_cpu_freq());
   EEPROM.begin(512);
 
   // set builtin led pin as output
@@ -331,7 +347,7 @@ void setup() {
   //fetches ssid and pass and tries to connect
   //if it does not connect it starts an access point with the specified name
   //here  "AutoConnectAP"
-  //and goes into a blocking loop awaiting configuration
+  //and goes into a blocking loop awaiting configurationñ
   if (!wifiManager.autoConnect(HOSTNAME)) {
     DBG_OUTPUT_PORT.println("failed to connect and hit timeout");
     //reset and try again, or maybe put it to deep sleep
@@ -909,6 +925,10 @@ void loop() {
   #ifdef ENABLE_OTA
     ArduinoOTA.handle();
   #endif
+  
+  #ifdef REMOTE_DEBUG
+    Debug.handle();         // Handle telnet server
+  #endif    
 
   #ifdef ENABLE_MQTT
     if (WiFi.status() != WL_CONNECTED) {
